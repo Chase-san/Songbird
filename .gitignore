@@ -1,0 +1,4 @@
+*.bat
+*.c
+songbird_template_file.h
+Makefile
