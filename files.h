@@ -16,8 +16,7 @@
 #ifndef __SONGBIRD_FILES_H__
 #define __SONGBIRD_FILES_H__
 
-#include <stddef.h>
-/* If you don't have IO don't include this... */
+/* If you don't have IO don't include this file... */
 #include <stdio.h>
 
 #ifndef __SB_NO_ALLOC__
@@ -38,15 +37,15 @@ extern "C" {
 #define __songbird_header_inline__	static inline
 #endif
 
-__songbird_header_inline__	size_t sb_file_size(const char *);
-__songbird_header_inline__	void *sb_file_load(const char *, const size_t);
-__songbird_header_inline__	void *sb_file_load2(const char *, size_t *);
-__songbird_header_inline__	void sb_file_write(const char *, const void *, const size_t);
+__songbird_header_inline__	unsigned sb_file_size(char const *);
+__songbird_header_inline__	void *sb_file_load(char const *, unsigned const);
+__songbird_header_inline__	void *sb_file_load2(char const *, unsigned const *);
+__songbird_header_inline__	void sb_file_write(char const *, void const *, unsigned const);
 
 __songbird_header_inline__
-size_t sb_file_size(const char *filename) {
+unsigned sb_file_size(char const *filename) {
 	FILE *f;
-	size_t size;
+	unsigned size;
 	/* TODO determine if STAT exists somehow. So we have the option of faster ways to do this. */
 	/* This method itself isn't exactly cross platform either. But it `usually` works. */
 	f = fopen(filename, "rb");
@@ -57,7 +56,7 @@ size_t sb_file_size(const char *filename) {
 }
 
 __songbird_header_inline__
-void *sb_file_load(const char *filename, const size_t size) {
+void *sb_file_load(char const *filename, unsigned const size) {
 	FILE *f;
 	void *ptr;
 	ptr = sb_malloc(size);
@@ -68,13 +67,13 @@ void *sb_file_load(const char *filename, const size_t size) {
 }
 
 __songbird_header_inline__
-void *sb_file_load2(const char *filename, size_t *size) {
+void *sb_file_load2(char const *filename, unsigned const *size) {
 	*size = sb_file_size(filename);
 	return sb_file_load(filename, *size);
 }
 
 __songbird_header_inline__
-void sb_file_write(const char *filename, const void *ptr, const size_t size) {
+void sb_file_write(char const *filename, void const *ptr, unsigned const size) {
 	FILE *f;
 	f = fopen(filename, "wb");
 	fwrite(ptr, size, 1, f);
