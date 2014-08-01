@@ -16,8 +16,6 @@
 #ifndef __SONGBIRD_VECTOR_H__
 #define __SONGBIRD_VECTOR_H__
 
-#include <stddef.h>
-
 #ifndef __SB_NO_ALLOC__
 #include <stdlib.h>
 #define sb_malloc malloc
@@ -36,39 +34,34 @@ extern "C" {
 #define __songbird_header_inline__	static inline
 #endif
 
-#define SB_VECTOR_INITIAL_CAPACITY	4
-#define SB_VECTOR_RESIZE_MULTIPLIER	2
+#ifndef __songbird_iter_func__
+#define __songbird_iter_func__
+typedef void (*sb_iter_f)(void const *);
+#endif
 
 /* it is highly recommended you do not change any values in this structure manually */
 typedef struct {
-	unsigned size;
-	unsigned capacity;
-	/* (void **) makes the most sense to me here since I am storing (void *) in an array of (void *). */
-	const void **entries;
+	unsigned const size;
+	unsigned const capacity;
+	void const **entries;
 } sb_vector_t;
 
 __songbird_header_inline__	sb_vector_t *sb_vector_alloc();
 __songbird_header_inline__	void sb_vector_free(sb_vector_t *);
-__songbird_header_inline__	void sb_vector_clear(sb_vector_t *);
-__songbird_header_inline__	void sb_vector_trim_capacity(sb_vector_t *);
-__songbird_header_inline__	const void *sb_vector_get(sb_vector_t *, unsigned);
-__songbird_header_inline__	const void *sb_vector_remove(sb_vector_t *, unsigned);
-__songbird_header_inline__	void sb_vector_insert(sb_vector_t *, unsigned , const void *);
-__songbird_header_inline__	void sb_vector_add(sb_vector_t *, const void *);
-__songbird_header_inline__	const unsigned sb_vector_index_of(sb_vector_t *, const void *);
-__songbird_header_inline__	int sb_vector_is_empty(sb_vector_t *);
-__songbird_header_inline__	void sb_vector_push(sb_vector_t *vector, const void *);
-__songbird_header_inline__	const void *sb_vector_pop(sb_vector_t *);
-__songbird_header_inline__	const void *sb_vector_head(sb_vector_t *);
-__songbird_header_inline__	const void *sb_vector_foot(sb_vector_t *);
-__songbird_header_inline__	const void *sb_vector_peek(sb_vector_t *);
+__songbird_header_inline__	unsigned sb_vector_size(sb_vector_t *);
+__songbird_header_inline__	void sb_vector_add(sb_vector_t *, void const *);
+__songbird_header_inline__	void sb_vector_insert(sb_vector_t *, unsigned , void const *);
+__songbird_header_inline__	void const *sb_vector_get(sb_vector_t *, unsigned);
+__songbird_header_inline__	void const *sb_vector_set(sb_vector_t *, unsigned, void const *);
+__songbird_header_inline__	void const *sb_vector_remove(sb_vector_t *, unsigned);
+__songbird_header_inline__	void sb_vector_iterate(sb_vector_t *, sb_iter_f);
 
 __songbird_header_inline__
 sb_vector_t *sb_vector_alloc() {
 	sb_vector_t *vector = sb_malloc(sizeof(sb_vector_t));
-	vector->size = 0;
-	vector->capacity = 0;
-	vector->entries = NULL;
+	*(unsigned *)&vector->size = 0;
+	*(unsigned *)&vector->capacity = 16;
+	vector->entries = (void const **)sb_malloc(sizeof(void *) * 16);
 	return vector;
 }
 
@@ -77,91 +70,40 @@ void sb_vector_free(sb_vector_t *vector) {
 	if(vector->capacity > 0) {
 		sb_free(vector->entries);
 	}
-	vector->size = 0;
-	vector->capacity = 0;
-	vector->entries = NULL;
 	sb_free(vector);
 }
 
 __songbird_header_inline__
-void sb_vector_clear(sb_vector_t *vector) {
-	vector->size = 0;
-}
-
-/* Check errno for ENOMEM after this? */
-__songbird_header_inline__
-void __sb_vector_resize(sb_vector_t *vector, unsigned capacity) {
-	void *new_entries = NULL;
-	if(capacity < vector->size) {
-		vector->size = capacity;
-		return;
-	}
-	vector->capacity = capacity;
-	/* (const void **) is required for weirdo C++ users (go use boost) */
-	new_entries = (const void **)sb_realloc(vector->entries, sizeof(void *) * capacity);
-	if(new_entries != NULL) {
-		vector->entries = new_entries;
-	}
+unsigned sb_vector_size(sb_vector_t *vector) {
+	return vector->size;
 }
 
 __songbird_header_inline__
-void sb_vector_trim_capacity(sb_vector_t *vector) {
-	if(vector->capacity > 0) {
-		__sb_vector_resize(vector, vector->size);
+void __sb_vector_resize(sb_vector_t *vector) {
+	/* double size */
+	unsigned new_capacity = vector->capacity * 2;
+	void const **new_entries = (const void **)sb_realloc(vector->entries, sizeof(void *) * new_capacity);
+	if(new_entries == NULL) {
+		return; /** FAILURE! */
 	}
-}
-
-/* not required to access the data, but you really should use it */
-__songbird_header_inline__
-const void *sb_vector_get(sb_vector_t *vector, unsigned index) {
-	if(index >= vector->size) {
-		return NULL; /* index out of bounds, fail silently */
-	}
-	return vector->entries[index];
-}
-
-__songbird_header_inline__
-const void *sb_vector_remove(sb_vector_t *vector, unsigned index) {
-	const void *retvalue = NULL;
-	if(index >= vector->size) {
-		return retvalue; /* index out of bounds, fail silently */
-	}
-	--vector->size;
-	retvalue = vector->entries[index];
-	/* move everything after removed index down one */
-	for(; index <= vector->size; ++index) {
-		vector->entries[index] = vector->entries[index + 1];
-	}
-	return retvalue;
-}
-
-__songbird_header_inline__
-void __sb_vector_check_capacity(sb_vector_t *vector) {
-	unsigned new_capacity = 0;
-	if(vector->size == vector->capacity) {
-		/* expand capacity */
-		new_capacity = (int)(vector->capacity * SB_VECTOR_RESIZE_MULTIPLIER);
-		if(new_capacity < SB_VECTOR_INITIAL_CAPACITY) {
-			new_capacity = SB_VECTOR_INITIAL_CAPACITY;
-		}
-		__sb_vector_resize(vector, new_capacity);
-	}
+	vector->entries = new_entries;
+	*(unsigned *)&vector->capacity = new_capacity;
 }
 
 __songbird_header_inline__
 void sb_vector_insert(sb_vector_t *vector, unsigned index, const void *value) {
-	unsigned sindex = 0;
+	unsigned i;
 	if(index > vector->size) {
-		/* fail if we are trying to insert beyond the valid range */
 		return;
 	}
-	__sb_vector_check_capacity(vector);
 	/* move everything after added index up one */
-	for(sindex = vector->size; sindex > index; --sindex) {
-		vector->entries[sindex] = vector->entries[sindex - 1];
+	for(i = vector->size; i > index; --i) {
+		vector->entries[i] = vector->entries[i - 1];
 	}
 	vector->entries[index] = value;
-	++vector->size;
+	if(++ * (unsigned *)&vector->size == vector->capacity) {
+		__sb_vector_resize(vector);
+	}
 }
 
 __songbird_header_inline__
@@ -170,49 +112,44 @@ void sb_vector_add(sb_vector_t *vector, const void *value) {
 }
 
 __songbird_header_inline__
-const unsigned sb_vector_index_of(sb_vector_t *vector, const void *value) {
-	unsigned index = 0;
-	if(vector->size == 0) {
-		return -1;
+void const *sb_vector_get(sb_vector_t *vector, unsigned index) {
+	if(index >= vector->size) {
+		return NULL;
 	}
-	for(; index < vector->size; ++index) {
-		if(vector->entries[index] == value) {
-			return index;
-		}
+	return vector->entries[index];
+}
+
+__songbird_header_inline__
+void const *sb_vector_set(sb_vector_t *vector, unsigned index, const void *value) {
+	void const *retval = NULL;
+	if(index >= vector->size) {
+		return NULL;
 	}
-	return -1;
+	retval = vector->entries[index];
+	vector->entries[index] = value;
+	return retval;
 }
 
 __songbird_header_inline__
-int sb_vector_is_empty(sb_vector_t *vector) {
-	return vector->size == 0;
+void const *sb_vector_remove(sb_vector_t *vector, unsigned index) {
+	void const *retval = NULL;
+	if(index >= vector->size) {
+		return NULL;
+	}
+	retval = vector->entries[index];
+	/* move everything after removed index down one */
+	for(-- * (unsigned *)&vector->size; index <= vector->size; ++index) {
+		vector->entries[index] = vector->entries[index + 1];
+	}
+	return retval;
 }
 
 __songbird_header_inline__
-void sb_vector_push(sb_vector_t *vector, const void *value) {
-	sb_vector_insert(vector, vector->size, value);
-}
-
-__songbird_header_inline__
-const void *sb_vector_pop(sb_vector_t *vector) {
-	/* 0 - 1 = 255, 65535, etc, which > 0, so this is safe */
-	return sb_vector_remove(vector, vector->size - 1);
-}
-
-__songbird_header_inline__
-const void *sb_vector_head(sb_vector_t *vector) {
-	return sb_vector_get(vector, 0);
-}
-
-__songbird_header_inline__
-const void *sb_vector_foot(sb_vector_t *vector) {
-	/* 0 - 1 = 255, 65535, etc, which > 0, so this is safe */
-	return sb_vector_get(vector, vector->size - 1);
-}
-
-__songbird_header_inline__
-const void *sb_vector_peek(sb_vector_t *vector) {
-	return sb_vector_foot(vector);
+void sb_vector_iterate(sb_vector_t *vector, sb_iter_f iterfun) {
+	unsigned i = 0;
+	for(; i < vector->size; ++i) {
+		iterfun(vector->entries[i]);
+	}
 }
 
 #ifdef __cplusplus

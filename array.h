@@ -16,8 +16,6 @@
 #ifndef __SONGBIRD_ARRAY_H__
 #define __SONGBIRD_ARRAY_H__
 
-#include <stddef.h>
-
 #ifndef __SB_NO_ALLOC__
 #include <stdlib.h>
 #define sb_malloc malloc
@@ -36,24 +34,29 @@ extern "C" {
 #define __songbird_header_inline__	static inline
 #endif
 
+#ifndef __songbird_iter_func__
+#define __songbird_iter_func__
+typedef void (*sb_iter_f)(void const *);
+#endif
+
 typedef struct {
-	const unsigned size;
-	const void **entries;
+	unsigned const size;
+	void const **entries;
 } sb_array_t;
 
-__songbird_header_inline__	sb_array_t *sb_array_alloc(const unsigned);
+__songbird_header_inline__	sb_array_t *sb_array_alloc(unsigned const);
 __songbird_header_inline__	void sb_array_free(sb_array_t *);
-__songbird_header_inline__	const void *sb_array_get(const sb_array_t *, const unsigned);
-__songbird_header_inline__	const void *sb_array_set(sb_array_t *, const unsigned, const void *);
+__songbird_header_inline__	unsigned sb_array_size(sb_array_t *);
+__songbird_header_inline__	void const *sb_array_get(sb_array_t *, unsigned const);
+__songbird_header_inline__	void const *sb_array_set(sb_array_t *, unsigned const, void const *);
+__songbird_header_inline__	void sb_array_iterate(sb_array_t *, sb_iter_f);
 
 __songbird_header_inline__
-sb_array_t *sb_array_alloc(const unsigned size) {
+sb_array_t *sb_array_alloc(unsigned const size) {
 	sb_array_t *array = sb_malloc(sizeof(sb_array_t));
 	if(array == NULL) {
 		return NULL;
 	}
-	/* A somewhat hacky way to set the struct's
-	   size value without a compiler error. */
 	*(unsigned *)&array->size = size;
 	array->entries = sb_malloc(size * sizeof(void *));
 	if(array->entries == NULL) {
@@ -72,7 +75,12 @@ void sb_array_free(sb_array_t *array) {
 }
 
 __songbird_header_inline__
-const void *sb_array_get(const sb_array_t *array, const unsigned index) {
+unsigned sb_array_size(sb_array_t *array) {
+	return array->size;
+}
+
+__songbird_header_inline__
+void const *sb_array_get(sb_array_t *array, unsigned const index) {
 	if(index > array->size) {
 		return NULL;
 	}
@@ -80,14 +88,22 @@ const void *sb_array_get(const sb_array_t *array, const unsigned index) {
 }
 
 __songbird_header_inline__
-const void *sb_array_set(sb_array_t *array, const unsigned index, const void *value) {
-	const void *retval = NULL;
+void const *sb_array_set(sb_array_t *array, unsigned const index, void const *value) {
+	void const *retval = NULL;
 	if(index > array->size) {
 		return NULL;
 	}
 	retval = array->entries[index];
 	array->entries[index] = value;
 	return retval;
+}
+
+__songbird_header_inline__
+void sb_array_iterate(sb_array_t *array, sb_iter_f iterfun) {
+	unsigned i = 0;
+	for(; i < array->size; ++i) {
+		iterfun(array->entries[i]);
+	}
 }
 
 #undef __songbird_header_inline__
