@@ -1,3 +1,18 @@
+/**
+ *  Copyright (c) 2014, Robert Maupin <chasesan@gmail.com>
+ *
+ *  Permission to use, copy, modify, and/or distribute this software for any
+ *  purpose with or without fee is hereby granted, provided that the above
+ *  copyright notice and this permission notice appear in all copies.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ *  WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ *  MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ *  ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ *  WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ *  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ *  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
 #ifndef __SONGBIRD_LIST_H__
 #define __SONGBIRD_LIST_H__
 
@@ -23,6 +38,7 @@ extern "C" {
 
 /* it is highly recommended you do not change any values in this structure manually */
 typedef struct sb_list_node sb_list_node_t;
+
 struct sb_list_node {
 	const void *value;
 	sb_list_node_t *prev;
@@ -35,6 +51,18 @@ typedef struct {
 	sb_list_node_t *head;
 	sb_list_node_t *foot;
 } sb_list_t;
+
+__songbird_header_inline__	sb_list_t *sb_list_alloc();
+__songbird_header_inline__	void sb_list_free(sb_list_t *);
+__songbird_header_inline__	void sb_list_clear(sb_list_t *);
+__songbird_header_inline__	int sb_list_is_empty(sb_list_t *);
+__songbird_header_inline__	void sb_list_push_head(sb_list_t *, const void *);
+__songbird_header_inline__	const void *sb_list_peek_head(sb_list_t *);
+__songbird_header_inline__	const void *sb_list_pop_head(sb_list_t *);
+__songbird_header_inline__	void sb_list_push_foot(sb_list_t *, const void *);
+__songbird_header_inline__	const void *sb_list_peek_foot(sb_list_t *);
+__songbird_header_inline__	const void *sb_list_pop_foot(sb_list_t *);
+__songbird_header_inline__	sb_list_node_t *sb_list_remove(sb_list_t *, sb_list_node_t *);
 
 __songbird_header_inline__
 sb_list_t *sb_list_alloc() {
@@ -54,7 +82,7 @@ __songbird_header_inline__
 sb_list_node_t *__sb_node_create(sb_list_node_t *prev, sb_list_node_t *next, const void *value) {
 	sb_list_node_t *node = sb_malloc(sizeof(sb_list_node_t));
 	node->value = value;
-		node->prev = prev;
+	node->prev = prev;
 	if(prev != NULL) {
 		prev->next = node;
 	}
@@ -69,25 +97,27 @@ sb_list_node_t *__sb_node_create(sb_list_node_t *prev, sb_list_node_t *next, con
 __songbird_header_inline__
 void sb_list_push_head(sb_list_t *list, const void *value) {
 	if(list->head == NULL) {
-		list->head = list->foot = __sb_node_create(NULL,NULL,value);
+		list->head = list->foot = __sb_node_create(NULL, NULL, value);
 	} else {
-		list->head = __sb_node_create(NULL,list->head,value);
+		list->head = __sb_node_create(NULL, list->head, value);
 	}
 	++list->size;
 }
 
 __songbird_header_inline__
 const void *sb_list_peek_head(sb_list_t *list) {
-	if(list->head == NULL)
+	if(list->head == NULL) {
 		return NULL;
+	}
 	return list->head->value;
 }
 
 __songbird_header_inline__
 const void *sb_list_pop_head(sb_list_t *list) {
 	const void *value = NULL;
-	if(list->head == NULL)
+	if(list->head == NULL) {
 		return NULL;
+	}
 	value = list->head->value;
 	if(list->head == list->foot) {
 		sb_free(list->head);
@@ -106,25 +136,27 @@ const void *sb_list_pop_head(sb_list_t *list) {
 __songbird_header_inline__
 void sb_list_push_foot(sb_list_t *list, const void *value) {
 	if(list->head == NULL) {
-		list->head = list->foot = __sb_node_create(NULL,NULL,value);
+		list->head = list->foot = __sb_node_create(NULL, NULL, value);
 	} else {
-		list->foot = __sb_node_create(list->foot,NULL,value);
+		list->foot = __sb_node_create(list->foot, NULL, value);
 	}
 	++list->size;
 }
 
 __songbird_header_inline__
 const void *sb_list_peek_foot(sb_list_t *list) {
-	if(list->foot == NULL)
+	if(list->foot == NULL) {
 		return NULL;
+	}
 	return list->foot->value;
 }
 
 __songbird_header_inline__
 const void *sb_list_pop_foot(sb_list_t *list) {
 	const void *value = NULL;
-	if(list->foot == NULL)
+	if(list->foot == NULL) {
 		return NULL;
+	}
 	value = list->foot->value;
 	if(list->head == list->foot) {
 		sb_free(list->head);

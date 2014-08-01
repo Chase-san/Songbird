@@ -1,4 +1,7 @@
 *.bat
 *.c
+*.d
+*.o
+*.exe
 songbird_template_file.h
 Makefile

@@ -1,3 +1,18 @@
+/**
+ *  Copyright (c) 2014, Robert Maupin <chasesan@gmail.com>
+ *
+ *  Permission to use, copy, modify, and/or distribute this software for any
+ *  purpose with or without fee is hereby granted, provided that the above
+ *  copyright notice and this permission notice appear in all copies.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ *  WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ *  MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ *  ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ *  WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ *  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ *  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
 #ifndef __SONGBIRD_STACK_H__
 #define __SONGBIRD_STACK_H__
 
@@ -26,6 +41,12 @@ typedef struct {
 	unsigned top;
 	const void **entries;
 } sb_stack_t;
+
+__songbird_header_inline__	sb_stack_t *sb_stack_alloc(const unsigned);
+__songbird_header_inline__	void sb_stack_free(sb_stack_t *);
+__songbird_header_inline__	const void *sb_stack_peek(const sb_stack_t *);
+__songbird_header_inline__	const void *sb_stack_pop(sb_stack_t *);
+__songbird_header_inline__	void sb_stack_push(sb_stack_t *, const void *);
 
 __songbird_header_inline__
 sb_stack_t *sb_stack_alloc(const unsigned capacity) {
@@ -68,8 +89,9 @@ const void *sb_stack_pop(sb_stack_t *stack) {
 
 __songbird_header_inline__
 void sb_stack_push(sb_stack_t *stack, const void *value) {
-	if(stack->top == stack->capacity)
+	if(stack->top == stack->capacity) {
 		return;
+	}
 	stack->entries[stack->top++] = value;
 }
 

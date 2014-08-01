@@ -1,3 +1,18 @@
+/**
+ *  Copyright (c) 2014, Robert Maupin <chasesan@gmail.com>
+ *
+ *  Permission to use, copy, modify, and/or distribute this software for any
+ *  purpose with or without fee is hereby granted, provided that the above
+ *  copyright notice and this permission notice appear in all copies.
+ *
+ *  THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES
+ *  WITH REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF
+ *  MERCHANTABILITY AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR
+ *  ANY SPECIAL, DIRECT, INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES
+ *  WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
+ *  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
+ *  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
+ */
 #ifndef __SONGBIRD_VECTOR_H__
 #define __SONGBIRD_VECTOR_H__
 
@@ -31,6 +46,22 @@ typedef struct {
 	/* (void **) makes the most sense to me here since I am storing (void *) in an array of (void *). */
 	const void **entries;
 } sb_vector_t;
+
+__songbird_header_inline__	sb_vector_t *sb_vector_alloc();
+__songbird_header_inline__	void sb_vector_free(sb_vector_t *);
+__songbird_header_inline__	void sb_vector_clear(sb_vector_t *);
+__songbird_header_inline__	void sb_vector_trim_capacity(sb_vector_t *);
+__songbird_header_inline__	const void *sb_vector_get(sb_vector_t *, unsigned);
+__songbird_header_inline__	const void *sb_vector_remove(sb_vector_t *, unsigned);
+__songbird_header_inline__	void sb_vector_insert(sb_vector_t *, unsigned , const void *);
+__songbird_header_inline__	void sb_vector_add(sb_vector_t *, const void *);
+__songbird_header_inline__	const unsigned sb_vector_index_of(sb_vector_t *, const void *);
+__songbird_header_inline__	int sb_vector_is_empty(sb_vector_t *);
+__songbird_header_inline__	void sb_vector_push(sb_vector_t *vector, const void *);
+__songbird_header_inline__	const void *sb_vector_pop(sb_vector_t *);
+__songbird_header_inline__	const void *sb_vector_head(sb_vector_t *);
+__songbird_header_inline__	const void *sb_vector_foot(sb_vector_t *);
+__songbird_header_inline__	const void *sb_vector_peek(sb_vector_t *);
 
 __songbird_header_inline__
 sb_vector_t *sb_vector_alloc() {
@@ -124,16 +155,12 @@ void sb_vector_insert(sb_vector_t *vector, unsigned index, const void *value) {
 		/* fail if we are trying to insert beyond the valid range */
 		return;
 	}
-	
 	__sb_vector_check_capacity(vector);
-	
 	/* move everything after added index up one */
 	for(sindex = vector->size; sindex > index; --sindex) {
 		vector->entries[sindex] = vector->entries[sindex - 1];
 	}
-	
 	vector->entries[index] = value;
-	
 	++vector->size;
 }
 
@@ -145,9 +172,10 @@ void sb_vector_add(sb_vector_t *vector, const void *value) {
 __songbird_header_inline__
 const unsigned sb_vector_index_of(sb_vector_t *vector, const void *value) {
 	unsigned index = 0;
-	if(vector->size == 0)
+	if(vector->size == 0) {
 		return -1;
-	for(;index < vector->size; ++index) {
+	}
+	for(; index < vector->size; ++index) {
 		if(vector->entries[index] == value) {
 			return index;
 		}
@@ -173,7 +201,7 @@ const void *sb_vector_pop(sb_vector_t *vector) {
 
 __songbird_header_inline__
 const void *sb_vector_head(sb_vector_t *vector) {
-	return sb_vector_get(vector,0);
+	return sb_vector_get(vector, 0);
 }
 
 __songbird_header_inline__
