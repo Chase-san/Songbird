@@ -23,8 +23,9 @@
 #else
 #include <sys/types.h>
 #include <sys/socket.h>
-#include <sys/select.h>
 #include <arpa/inet.h>
+#include <unistd.h>
+#include <fcntl.h>
 #endif
 
 #ifdef __cplusplus
@@ -47,29 +48,31 @@ enum {
 	SB_SOCK_ERROR = -1
 };
 
-/* Client Sockets */
 
+/* General Sockets */
 typedef int sb_socket_t;
+typedef int sb_ssocket_t;
 
 __songbird_header_inline__	int sb_sockets_start();
 __songbird_header_inline__	void sb_sockets_stop();
+__songbird_header_inline__	int sb_sockets_set_non_blocking(sb_socket_t *);
 
+
+/* Client Sockets */
 __songbird_header_inline__	int sb_socket_open(sb_socket_t *, const char *, unsigned short);
 __songbird_header_inline__	void sb_socket_close(sb_socket_t *);
 __songbird_header_inline__	int sb_socket_write(sb_socket_t *, const char *, unsigned);
 __songbird_header_inline__	int sb_socket_read(sb_socket_t *, char *, unsigned);
 __songbird_header_inline__	int sb_socket_remote_address(sb_socket_t *, char *, unsigned, unsigned short *);
-__songbird_header_inline__	int sb_socket_can_read(sb_socket_t *); /* can be used with server sockets too */
+
 
 /* Server Sockets */
-
-typedef sb_socket_t sb_ssocket_t;
-
 __songbird_header_inline__	int sb_ssocket_open(sb_ssocket_t *, unsigned short, int queue);
-/* use sb_socket_can_read to determine if there is a waiting connection to avoid blocking */
+/* use sb_sockets_can_read to determine if there is a waiting connection to avoid blocking */
 __songbird_header_inline__	int sb_ssocket_accept(sb_ssocket_t *, sb_socket_t *);
 /* be sure to close all sockets opened with accept before calling this */
 __songbird_header_inline__	void sb_ssocket_close(sb_ssocket_t *);
+
 
 
 /* Function definitions. */
@@ -91,6 +94,28 @@ void sb_sockets_stop() {
 	WSACleanup();
 #endif
 }
+
+__songbird_header_inline__
+int sb_sockets_set_non_blocking(sb_socket_t *sock) {
+#ifdef _WIN32
+	unsigned long mode = 1;
+	if(ioctlsocket(*sock, FIONBIO, &mode)) {
+		return SB_SOCK_ERROR;
+	}
+#else
+	int flags = 0;
+	if ((flags = fcntl(fd, F_GETFL, 0)) == -1)
+		flags = 0;
+	if(fcntl(fd, F_SETFL, flags | O_NONBLOCK)) {
+		return SB_SOCK_ERROR;
+	}
+#endif
+	return SB_SOCK_OK;
+}
+/*
+    / * Fixme: O_NONBLOCK is defined but broken on SunOS 4.1.x and AIX 3.2.5. * /
+    
+	*/
 
 __songbird_header_inline__
 int __sb_socket_init(sb_socket_t *sock) {
@@ -147,22 +172,6 @@ int sb_socket_write(sb_socket_t *sock, const char *buf, unsigned len) {
 		return SB_SOCK_ERROR;
 	}
 	return sent;
-}
-
-__songbird_header_inline__
-int sb_socket_can_read(sb_socket_t *sock) {
-	int result;
-	struct timeval tv;
-	fd_set set;
-	FD_ZERO(&set);
-	FD_SET(*sock, &set);
-	tv.tv_sec = 0;
-	tv.tv_usec = 1000; /* 1 ms */
-	result = select(*sock+1, &set, NULL, NULL, &tv);
-	if(FD_ISSET(*sock , &set)) {
-		return SB_SOCK_OK;
-	}
-	return SB_SOCK_FAIL;
 }
 
 __songbird_header_inline__
