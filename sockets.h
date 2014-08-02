@@ -23,6 +23,7 @@
 #else
 #include <sys/types.h>
 #include <sys/socket.h>
+#include <sys/select.h>
 #include <arpa/inet.h>
 #endif
 
@@ -41,6 +42,7 @@ extern "C" {
 
 enum {
 	SB_SOCK_OK = 0,
+	SB_SOCK_FAIL = 1,
 	SB_SOCK_CLOSED = 0,
 	SB_SOCK_ERROR = -1
 };
@@ -49,17 +51,22 @@ enum {
 
 typedef int sb_socket_t;
 
+__songbird_header_inline__	int sb_sockets_start();
+__songbird_header_inline__	void sb_sockets_stop();
+
 __songbird_header_inline__	int sb_socket_open(sb_socket_t *, const char *, unsigned short);
 __songbird_header_inline__	void sb_socket_close(sb_socket_t *);
 __songbird_header_inline__	int sb_socket_write(sb_socket_t *, const char *, unsigned);
 __songbird_header_inline__	int sb_socket_read(sb_socket_t *, char *, unsigned);
 __songbird_header_inline__	int sb_socket_remote_address(sb_socket_t *, char *, unsigned, unsigned short *);
+__songbird_header_inline__	int sb_socket_can_read(sb_socket_t *); /* can be used with server sockets too */
 
 /* Server Sockets */
 
 typedef sb_socket_t sb_ssocket_t;
 
 __songbird_header_inline__	int sb_ssocket_open(sb_ssocket_t *, unsigned short, int queue);
+/* use sb_socket_can_read to determine if there is a waiting connection to avoid blocking */
 __songbird_header_inline__	int sb_ssocket_accept(sb_ssocket_t *, sb_socket_t *);
 /* be sure to close all sockets opened with accept before calling this */
 __songbird_header_inline__	void sb_ssocket_close(sb_ssocket_t *);
@@ -68,20 +75,30 @@ __songbird_header_inline__	void sb_ssocket_close(sb_ssocket_t *);
 /* Function definitions. */
 
 __songbird_header_inline__
-int __sb_socket_init(sb_socket_t *sock) {
+int sb_sockets_start() {
 #ifdef _WIN32
 	WSADATA wsaData;
 	if(WSAStartup(MAKEWORD(2, 2), &wsaData)) {
 		return SB_SOCK_ERROR;
 	}
 #endif
+	return SB_SOCK_OK;
+}
+
+__songbird_header_inline__
+void sb_sockets_stop() {
+#ifdef _WIN32
+	WSACleanup();
+#endif
+}
+
+__songbird_header_inline__
+int __sb_socket_init(sb_socket_t *sock) {
 	*sock = socket(PF_INET, SOCK_STREAM, IPPROTO_TCP);
 	if(*sock < 0) {
-#ifdef _WIN32
-		WSACleanup();
-#endif
 		return SB_SOCK_ERROR;
 	}
+	
 	return SB_SOCK_OK;
 }
 
@@ -96,9 +113,6 @@ int sb_socket_open(sb_socket_t *sock, const char *ip, unsigned short port) {
 	addr.sin_addr.s_addr = inet_addr(ip);
 	addr.sin_port = htons(port);
 	if(connect(*sock, (struct sockaddr *) &addr, sizeof(addr)) < 0) {
-#ifdef _WIN32
-		WSACleanup();
-#endif
 		return SB_SOCK_ERROR;
 	}
 	return SB_SOCK_OK;
@@ -109,14 +123,13 @@ void sb_socket_close(sb_socket_t *sock) {
 #ifdef _WIN32
 	shutdown(*sock, SD_BOTH);
 	closesocket(*sock);
-	WSACleanup();
+	/* WSACleanup(); */
 #else
 	shutdown(*sock, SHUT_RDWR);
 	close(*sock);
 #endif
 	*sock = -1;
 }
-
 
 __songbird_header_inline__
 int sb_socket_write(sb_socket_t *sock, const char *buf, unsigned len) {
@@ -136,6 +149,21 @@ int sb_socket_write(sb_socket_t *sock, const char *buf, unsigned len) {
 	return sent;
 }
 
+__songbird_header_inline__
+int sb_socket_can_read(sb_socket_t *sock) {
+	int result;
+	struct timeval tv;
+	fd_set set;
+	FD_ZERO(&set);
+	FD_SET(*sock, &set);
+	tv.tv_sec = 0;
+	tv.tv_usec = 1000; /* 1 ms */
+	result = select(*sock+1, &set, NULL, NULL, &tv);
+	if(FD_ISSET(*sock , &set)) {
+		return SB_SOCK_OK;
+	}
+	return SB_SOCK_FAIL;
+}
 
 __songbird_header_inline__
 int sb_socket_read(sb_socket_t *sock, char *buf, unsigned len) {
@@ -175,7 +203,7 @@ int sb_ssocket_open(sb_ssocket_t *ssock, unsigned short port, int queue) {
 	if(bind(*ssock, (struct sockaddr *)&addr, sizeof(addr)) < 0) {
 		return SB_SOCK_ERROR;
 	}
-	if(listen(*ssock, queue) < 9) {
+	if(listen(*ssock, queue) < 0) {
 		return SB_SOCK_ERROR;
 	}
 	return SB_SOCK_OK;
