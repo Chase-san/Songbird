@@ -39,13 +39,18 @@ extern "C" {
 #define __songbird_header_inline__	static inline
 #endif
 
+#ifdef _WIN32
+#define EWOULDBLOCK	WSAEWOULDBLOCK
+#define EAGAIN	WSAEINTR
+#endif
+
 /* A generic simple sockets wrapper. Not perfect. */
 
 enum {
 	SB_SOCK_OK = 0,
-	SB_SOCK_FAIL = 1,
-	SB_SOCK_CLOSED = 0,
-	SB_SOCK_ERROR = -1
+	SB_SOCK_NONE = -2,
+	SB_SOCK_ERROR = -1,
+	SB_SOCK_CLOSED = 0
 };
 
 
@@ -158,17 +163,22 @@ void sb_socket_close(sb_socket_t *sock) {
 
 __songbird_header_inline__
 int sb_socket_write(sb_socket_t *sock, const char *buf, unsigned len) {
-#ifdef _WIN32
+#ifdef __APPLE__
+	int sent = write(sock, buf, len);
+#else
 	int sent = send(*sock, buf, len, 0);
 	if(sent == SOCKET_ERROR) {
+#ifdef _WIN32
 		/* socket crash */
 		sb_socket_close(sock);
+#endif
 		return SB_SOCK_ERROR;
 	}
-#else
-	int sent = write(sock, buf, len);
 #endif
 	if(sent < 0) {
+		if(errno == EAGAIN || errno == EWOULDBLOCK) {
+			return SB_SOCK_NONE;
+		}
 		return SB_SOCK_ERROR;
 	}
 	return sent;
@@ -176,12 +186,15 @@ int sb_socket_write(sb_socket_t *sock, const char *buf, unsigned len) {
 
 __songbird_header_inline__
 int sb_socket_read(sb_socket_t *sock, char *buf, unsigned len) {
-#ifdef _WIN32
-	int result = recv(*sock, buf, len, 0);
-#else
+#ifdef __APPLE__
 	int result = read(*sock, buf, len);
+#else
+	int result = recv(*sock, buf, len, 0);
 #endif
 	if(result < 0) {
+		if(errno == EAGAIN || errno == EWOULDBLOCK) {
+			return SB_SOCK_NONE;
+		}
 		return SB_SOCK_ERROR;
 	}
 	return result;
