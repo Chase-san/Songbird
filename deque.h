@@ -26,12 +26,12 @@
 #ifdef __cplusplus
 /* Not sure why you would want to use this in C++, but just in case. */
 extern "C" {
-#define __songbird_header_inline__	inline
+#define __songbird_header__	inline
 /* Works even if __STDC_VERSION__ is not defined. */
 #elif __STDC_VERSION__ <= 199409L
-#define __songbird_header_inline__	static __inline__
+#define __songbird_header__	static __inline__
 #else
-#define __songbird_header_inline__	static inline
+#define __songbird_header__	static inline
 #endif
 
 #ifndef __songbird_iter_func__
@@ -49,18 +49,18 @@ typedef struct {
 
 /* This is an implementation of a double ended array backed queue. Suitable for both FIFO and LIFO. */
 
-__songbird_header_inline__	sb_deque_t *sb_deque_alloc();
-__songbird_header_inline__	void sb_deque_free(sb_deque_t *);
-__songbird_header_inline__	unsigned sb_deque_size(sb_deque_t *);
-__songbird_header_inline__	void sb_deque_push_front(sb_deque_t *, void const *);
-__songbird_header_inline__	void sb_deque_push_back(sb_deque_t *, void const *);
-__songbird_header_inline__	void const *sb_deque_peek_front(sb_deque_t *);
-__songbird_header_inline__	void const *sb_deque_peek_back(sb_deque_t *);
-__songbird_header_inline__	void const *sb_deque_pop_front(sb_deque_t *);
-__songbird_header_inline__	void const *sb_deque_pop_back(sb_deque_t *);
-__songbird_header_inline__	void sb_deque_iterate(sb_deque_t *, sb_iter_f);
+__songbird_header__	sb_deque_t *sb_deque_alloc();
+__songbird_header__	void sb_deque_free(sb_deque_t *);
+__songbird_header__	unsigned sb_deque_size(sb_deque_t *);
+__songbird_header__	void sb_deque_push_front(sb_deque_t *, void const *);
+__songbird_header__	void sb_deque_push_back(sb_deque_t *, void const *);
+__songbird_header__	void const *sb_deque_peek_front(sb_deque_t *);
+__songbird_header__	void const *sb_deque_peek_back(sb_deque_t *);
+__songbird_header__	void const *sb_deque_pop_front(sb_deque_t *);
+__songbird_header__	void const *sb_deque_pop_back(sb_deque_t *);
+__songbird_header__	void sb_deque_iterate(sb_deque_t *, sb_iter_f);
 
-__songbird_header_inline__
+__songbird_header__
 sb_deque_t *sb_deque_alloc() {
 	sb_deque_t *deque = (sb_deque_t *)sb_malloc(sizeof(sb_deque_t));
 	if(!deque) {
@@ -77,7 +77,7 @@ sb_deque_t *sb_deque_alloc() {
 	return deque;
 }
 
-__songbird_header_inline__
+__songbird_header__
 void sb_deque_free(sb_deque_t *deque) {
 	if(!deque) {
 		return;
@@ -88,12 +88,12 @@ void sb_deque_free(sb_deque_t *deque) {
 	sb_free(deque);
 }
 
-__songbird_header_inline__
+__songbird_header__
 unsigned sb_deque_size(sb_deque_t *deque) {
 	return (deque->back - deque->front) & (deque->capacity - 1);
 }
 
-__songbird_header_inline__
+__songbird_header__
 void __sb_deque_resize(sb_deque_t *deque) {
 	unsigned i = 0;
 	unsigned n = deque->capacity;
@@ -118,7 +118,7 @@ void __sb_deque_resize(sb_deque_t *deque) {
 	*(unsigned *)&deque->back = n;
 }
 
-__songbird_header_inline__
+__songbird_header__
 void sb_deque_push_front(sb_deque_t *deque, void const *value) {
 	*(unsigned *)&deque->front = (deque->front - 1) & (deque->capacity - 1);
 	deque->entries[deque->front] = value;
@@ -127,7 +127,7 @@ void sb_deque_push_front(sb_deque_t *deque, void const *value) {
 	}
 }
 
-__songbird_header_inline__
+__songbird_header__
 void sb_deque_push_back(sb_deque_t *deque, void const *value) {
 	deque->entries[deque->back] = value;
 	*(unsigned *)&deque->back = (deque->back + 1) & (deque->capacity - 1);
@@ -136,7 +136,7 @@ void sb_deque_push_back(sb_deque_t *deque, void const *value) {
 	}
 }
 
-__songbird_header_inline__
+__songbird_header__
 void const *sb_deque_peek_front(sb_deque_t *deque) {
 	if(deque->front == deque->back) {
 		return NULL;
@@ -144,7 +144,7 @@ void const *sb_deque_peek_front(sb_deque_t *deque) {
 	return deque->entries[deque->front];
 }
 
-__songbird_header_inline__
+__songbird_header__
 void const *sb_deque_peek_back(sb_deque_t *deque) {
 	unsigned back;
 	if(deque->front == deque->back) {
@@ -154,7 +154,7 @@ void const *sb_deque_peek_back(sb_deque_t *deque) {
 	return deque->entries[back];
 }
 
-__songbird_header_inline__
+__songbird_header__
 void const *sb_deque_pop_front(sb_deque_t *deque) {
 	const void *value;
 	if(deque->front == deque->back) {
@@ -165,7 +165,7 @@ void const *sb_deque_pop_front(sb_deque_t *deque) {
 	return value;
 }
 
-__songbird_header_inline__
+__songbird_header__
 void const *sb_deque_pop_back(sb_deque_t *deque) {
 	if(deque->front == deque->back) {
 		return NULL;
@@ -174,7 +174,7 @@ void const *sb_deque_pop_back(sb_deque_t *deque) {
 	return deque->entries[deque->back];
 }
 
-__songbird_header_inline__
+__songbird_header__
 void sb_deque_iterate(sb_deque_t *queue, sb_iter_f iterfun) {
 	unsigned cursor = queue->front;
 	while(cursor != queue->back) {
@@ -188,6 +188,6 @@ void sb_deque_iterate(sb_deque_t *queue, sb_iter_f iterfun) {
 }
 #endif
 
-#undef __songbird_header_inline__
+#undef __songbird_header__
 
 #endif /* __SONGBIRD_DEQUE_H__ */

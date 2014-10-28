@@ -29,20 +29,20 @@
 #ifdef __cplusplus
 /* Not sure why you would want to use this in C++, but just in case. */
 extern "C" {
-#define __songbird_header_inline__	inline
+#define __songbird_header__	inline
 /* Works even if __STDC_VERSION__ is not defined. */
 #elif __STDC_VERSION__ <= 199409L
-#define __songbird_header_inline__	static __inline__
+#define __songbird_header__	static __inline__
 #else
-#define __songbird_header_inline__	static inline
+#define __songbird_header__	static inline
 #endif
 
-__songbird_header_inline__	unsigned sb_file_size(char const *);
-__songbird_header_inline__	void *sb_file_load(char const *, unsigned const);
-__songbird_header_inline__	void *sb_file_load2(char const *, unsigned const *);
-__songbird_header_inline__	void sb_file_write(char const *, void const *, unsigned const);
+__songbird_header__	unsigned sb_file_size(char const *);
+__songbird_header__	void *sb_file_load(char const *, unsigned const);
+__songbird_header__	void *sb_file_load2(char const *, unsigned *);
+__songbird_header__	void sb_file_write(char const *, void const *, unsigned const);
 
-__songbird_header_inline__
+__songbird_header__
 unsigned sb_file_size(char const *filename) {
 	FILE *f;
 	unsigned size;
@@ -55,7 +55,7 @@ unsigned sb_file_size(char const *filename) {
 	return size;
 }
 
-__songbird_header_inline__
+__songbird_header__
 void *sb_file_load(char const *filename, unsigned const size) {
 	FILE *f;
 	void *ptr;
@@ -66,13 +66,13 @@ void *sb_file_load(char const *filename, unsigned const size) {
 	return ptr;
 }
 
-__songbird_header_inline__
-void *sb_file_load2(char const *filename, unsigned const *size) {
+__songbird_header__
+void *sb_file_load2(char const *filename, unsigned *size) {
 	*size = sb_file_size(filename);
 	return sb_file_load(filename, *size);
 }
 
-__songbird_header_inline__
+__songbird_header__
 void sb_file_write(char const *filename, void const *ptr, unsigned const size) {
 	FILE *f;
 	f = fopen(filename, "wb");
@@ -80,7 +80,7 @@ void sb_file_write(char const *filename, void const *ptr, unsigned const size) {
 	fclose(f);
 }
 
-#undef __songbird_header_inline__
+#undef __songbird_header__
 
 #ifdef __cplusplus
 }

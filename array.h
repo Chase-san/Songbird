@@ -26,12 +26,12 @@
 #ifdef __cplusplus
 /* Not sure why you would want to use this in C++, but just in case. */
 extern "C" {
-#define __songbird_header_inline__	inline
+#define __songbird_header__	inline
 /* Works even if __STDC_VERSION__ is not defined. */
 #elif __STDC_VERSION__ <= 199409L
-#define __songbird_header_inline__	static __inline__
+#define __songbird_header__	static __inline__
 #else
-#define __songbird_header_inline__	static inline
+#define __songbird_header__	static inline
 #endif
 
 #ifndef __songbird_iter_func__
@@ -44,14 +44,14 @@ typedef struct {
 	void const **entries;
 } sb_array_t;
 
-__songbird_header_inline__	sb_array_t *sb_array_alloc(unsigned const);
-__songbird_header_inline__	void sb_array_free(sb_array_t *);
-__songbird_header_inline__	unsigned sb_array_size(sb_array_t *);
-__songbird_header_inline__	void const *sb_array_get(sb_array_t *, unsigned const);
-__songbird_header_inline__	void const *sb_array_set(sb_array_t *, unsigned const, void const *);
-__songbird_header_inline__	void sb_array_iterate(sb_array_t *, sb_iter_f);
+__songbird_header__	sb_array_t *sb_array_alloc(unsigned const);
+__songbird_header__	void sb_array_free(sb_array_t *);
+__songbird_header__	unsigned sb_array_size(sb_array_t *);
+__songbird_header__	void const *sb_array_get(sb_array_t *, unsigned const);
+__songbird_header__	void const *sb_array_set(sb_array_t *, unsigned const, void const *);
+__songbird_header__	void sb_array_iterate(sb_array_t *, sb_iter_f);
 
-__songbird_header_inline__
+__songbird_header__
 sb_array_t *sb_array_alloc(unsigned const size) {
 	sb_array_t *array = sb_malloc(sizeof(sb_array_t));
 	if(array == NULL) {
@@ -66,7 +66,7 @@ sb_array_t *sb_array_alloc(unsigned const size) {
 	return array;
 }
 
-__songbird_header_inline__
+__songbird_header__
 void sb_array_free(sb_array_t *array) {
 	sb_free(array->entries);
 	array->entries = NULL;
@@ -74,12 +74,12 @@ void sb_array_free(sb_array_t *array) {
 	array = NULL;
 }
 
-__songbird_header_inline__
+__songbird_header__
 unsigned sb_array_size(sb_array_t *array) {
 	return array->size;
 }
 
-__songbird_header_inline__
+__songbird_header__
 void const *sb_array_get(sb_array_t *array, unsigned const index) {
 	if(index > array->size) {
 		return NULL;
@@ -87,7 +87,7 @@ void const *sb_array_get(sb_array_t *array, unsigned const index) {
 	return array->entries[index];
 }
 
-__songbird_header_inline__
+__songbird_header__
 void const *sb_array_set(sb_array_t *array, unsigned const index, void const *value) {
 	void const *retval = NULL;
 	if(index > array->size) {
@@ -98,7 +98,7 @@ void const *sb_array_set(sb_array_t *array, unsigned const index, void const *va
 	return retval;
 }
 
-__songbird_header_inline__
+__songbird_header__
 void sb_array_iterate(sb_array_t *array, sb_iter_f iterfun) {
 	unsigned i = 0;
 	for(; i < array->size; ++i) {
@@ -106,7 +106,7 @@ void sb_array_iterate(sb_array_t *array, sb_iter_f iterfun) {
 	}
 }
 
-#undef __songbird_header_inline__
+#undef __songbird_header__
 
 #ifdef __cplusplus
 }

@@ -26,12 +26,12 @@
 #ifdef __cplusplus
 /* Not sure why you would want to use this in C++, but just in case. */
 extern "C" {
-#define __songbird_header_inline__	inline
+#define __songbird_header__	inline
 /* Works even if __STDC_VERSION__ is not defined. */
 #elif __STDC_VERSION__ <= 199409L
-#define __songbird_header_inline__	static __inline__
+#define __songbird_header__	static __inline__
 #else
-#define __songbird_header_inline__	static inline
+#define __songbird_header__	static inline
 #endif
 
 #ifndef __songbird_iter_func__
@@ -46,17 +46,17 @@ typedef struct {
 	void const **entries;
 } sb_vector_t;
 
-__songbird_header_inline__	sb_vector_t *sb_vector_alloc();
-__songbird_header_inline__	void sb_vector_free(sb_vector_t *);
-__songbird_header_inline__	unsigned sb_vector_size(sb_vector_t *);
-__songbird_header_inline__	void sb_vector_add(sb_vector_t *, void const *);
-__songbird_header_inline__	void sb_vector_insert(sb_vector_t *, unsigned , void const *);
-__songbird_header_inline__	void const *sb_vector_get(sb_vector_t *, unsigned);
-__songbird_header_inline__	void const *sb_vector_set(sb_vector_t *, unsigned, void const *);
-__songbird_header_inline__	void const *sb_vector_remove(sb_vector_t *, unsigned);
-__songbird_header_inline__	void sb_vector_iterate(sb_vector_t *, sb_iter_f);
+__songbird_header__	sb_vector_t *sb_vector_alloc();
+__songbird_header__	void sb_vector_free(sb_vector_t *);
+__songbird_header__	unsigned sb_vector_size(sb_vector_t *);
+__songbird_header__	void sb_vector_add(sb_vector_t *, void const *);
+__songbird_header__	void sb_vector_insert(sb_vector_t *, unsigned , void const *);
+__songbird_header__	void const *sb_vector_get(sb_vector_t *, unsigned);
+__songbird_header__	void const *sb_vector_set(sb_vector_t *, unsigned, void const *);
+__songbird_header__	void const *sb_vector_remove(sb_vector_t *, unsigned);
+__songbird_header__	void sb_vector_iterate(sb_vector_t *, sb_iter_f);
 
-__songbird_header_inline__
+__songbird_header__
 sb_vector_t *sb_vector_alloc() {
 	sb_vector_t *vector = sb_malloc(sizeof(sb_vector_t));
 	*(unsigned *)&vector->size = 0;
@@ -65,7 +65,7 @@ sb_vector_t *sb_vector_alloc() {
 	return vector;
 }
 
-__songbird_header_inline__
+__songbird_header__
 void sb_vector_free(sb_vector_t *vector) {
 	if(vector->capacity > 0) {
 		sb_free(vector->entries);
@@ -73,12 +73,12 @@ void sb_vector_free(sb_vector_t *vector) {
 	sb_free(vector);
 }
 
-__songbird_header_inline__
+__songbird_header__
 unsigned sb_vector_size(sb_vector_t *vector) {
 	return vector->size;
 }
 
-__songbird_header_inline__
+__songbird_header__
 void __sb_vector_resize(sb_vector_t *vector) {
 	/* double size */
 	unsigned new_capacity = vector->capacity * 2;
@@ -90,7 +90,7 @@ void __sb_vector_resize(sb_vector_t *vector) {
 	*(unsigned *)&vector->capacity = new_capacity;
 }
 
-__songbird_header_inline__
+__songbird_header__
 void sb_vector_insert(sb_vector_t *vector, unsigned index, const void *value) {
 	unsigned i;
 	if(index > vector->size) {
@@ -106,12 +106,12 @@ void sb_vector_insert(sb_vector_t *vector, unsigned index, const void *value) {
 	}
 }
 
-__songbird_header_inline__
+__songbird_header__
 void sb_vector_add(sb_vector_t *vector, const void *value) {
 	sb_vector_insert(vector, vector->size, value);
 }
 
-__songbird_header_inline__
+__songbird_header__
 void const *sb_vector_get(sb_vector_t *vector, unsigned index) {
 	if(index >= vector->size) {
 		return NULL;
@@ -119,7 +119,7 @@ void const *sb_vector_get(sb_vector_t *vector, unsigned index) {
 	return vector->entries[index];
 }
 
-__songbird_header_inline__
+__songbird_header__
 void const *sb_vector_set(sb_vector_t *vector, unsigned index, const void *value) {
 	void const *retval = NULL;
 	if(index >= vector->size) {
@@ -130,7 +130,7 @@ void const *sb_vector_set(sb_vector_t *vector, unsigned index, const void *value
 	return retval;
 }
 
-__songbird_header_inline__
+__songbird_header__
 void const *sb_vector_remove(sb_vector_t *vector, unsigned index) {
 	void const *retval = NULL;
 	if(index >= vector->size) {
@@ -144,7 +144,7 @@ void const *sb_vector_remove(sb_vector_t *vector, unsigned index) {
 	return retval;
 }
 
-__songbird_header_inline__
+__songbird_header__
 void sb_vector_iterate(sb_vector_t *vector, sb_iter_f iterfun) {
 	unsigned i = 0;
 	for(; i < vector->size; ++i) {
@@ -156,6 +156,6 @@ void sb_vector_iterate(sb_vector_t *vector, sb_iter_f iterfun) {
 }
 #endif
 
-#undef __songbird_header_inline__
+#undef __songbird_header__
 
 #endif /* __SONGBIRD_VECTOR_H__ */
