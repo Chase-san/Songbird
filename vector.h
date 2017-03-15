@@ -76,7 +76,7 @@ void sb_vector_init(sb_vector_t *vector);
  * 		(the SB_VECTOR_DEFAULT_CAPACITY).
  */
 __songbird_header__
-void sb_vector_init(sb_vector_t *vector, unsigned capacity);
+void sb_vector_init_cap(sb_vector_t *vector, unsigned capacity);
 
 /**
  * Frees all allocated memory for the given vector.
@@ -154,11 +154,11 @@ void sb_vector_iterate(sb_vector_t *vector, sb_iter_f iter);
 
 __songbird_header__
 void sb_vector_init(sb_vector_t *vector) {
-	sb_vector_init(vector, SB_VECTOR_DEFAULT_CAPACITY);
+	sb_vector_init_cap(vector, SB_VECTOR_DEFAULT_CAPACITY);
 }
 
 __songbird_header__
-void sb_vector_init(sb_vector_t *vector, unsigned capacity) {
+void sb_vector_init_cap(sb_vector_t *vector, unsigned capacity) {
 	if(capacity == 0) {
 		capacity = SB_VECTOR_DEFAULT_CAPACITY;
 	}
