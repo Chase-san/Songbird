@@ -3,7 +3,7 @@ Songbird
 
 Songbird is a set of stand alone libraries for C. The only requirements for
 most of the headers is some kind of dynamic memory allocation (customizable).
-But with a little tweaking they could be used without that as well.
+These headers are compatible with C89.
 
 Simple Libraries
  * array.h - A non-expanding array container.

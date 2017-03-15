@@ -1,12 +1,12 @@
 /**
  * Copyright (c) 2014-2017 Robert Maupin <chasesan@gmail.com>
  * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a
+ * copy of this software and associated documentation files (the "Software"),
+ * to deal in the Software without restriction, including without limitation
+ * the rights to use, copy, modify, merge, publish, distribute, sublicense,
+ * and/or sell copies of the Software, and to permit persons to whom the
+ * Software is furnished to do so, subject to the following conditions:
  * 
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
@@ -15,9 +15,9 @@
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE.
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+ * FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+ * DEALINGS IN THE SOFTWARE.
  */
 
 #ifndef __SONGBIRD_VECTOR_H__
@@ -143,10 +143,12 @@ __songbird_header__
 void const *sb_vector_remove(sb_vector_t *vector, unsigned index);
 
 /**
- * Iteraters through the given vector calling the specified iteration function.
- * This function does nothing if the specified iteration function is NULL.
+ * Iteraters through the given vector calling the specified iteration
+ * function. This function does nothing if the specified iteration function is
+ * NULL.
  * @param vector The vector.
- * @param iter A function pointer to the iteration function that will be called.
+ * @param iter A function pointer to the iteration function that will be
+ * 		called.
  */
 __songbird_header__
 void sb_vector_iterate(sb_vector_t *vector, sb_iter_f iter);
@@ -198,7 +200,8 @@ void __sb_vector_resize(sb_vector_t *vector) {
 }
 
 __songbird_header__
-void sb_vector_insert(sb_vector_t *vector, unsigned index, const void *value) {
+void sb_vector_insert(sb_vector_t *vector, unsigned index,
+		const void *value) {
 	unsigned i;
 	if(index > vector->size) {
 		return;
