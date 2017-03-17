@@ -23,7 +23,8 @@
 #ifndef __SONGBIRD_VECTOR_H__
 #define __SONGBIRD_VECTOR_H__
 
-#ifndef __SB_NO_ALLOC__
+#ifndef __SB_ALLOC__
+#define __SB_ALLOC__
 #include <stdlib.h>
 #define sb_malloc malloc
 #define sb_realloc realloc
@@ -41,13 +42,29 @@ extern "C" {
 #define __songbird_header__	static inline
 #endif
 
+#ifndef __SB_ERROR__
+#define __SB_ERROR__
+enum {
+	SB_ERROR_NONE = 0,
+	SB_ERROR_MEMORY_ALLOCATION = 1,
+	SB_ERROR_OUT_OF_BOUNDS = 2,
+};
+#if __STDC_VERSION__ >= 201112L && !defined __STDC_NO_THREADS__
+__thread int sb_error = SB_ERROR_NONE;
+#else
+int sb_error = SB_ERROR_NONE;
+#endif
+#define sb_error() (sb_error)
+#endif
+
 #ifndef __songbird_iter_func__
 #define __songbird_iter_func__
 typedef void (*sb_iter_f)(void const *);
 #endif
 
 enum {
-	SB_VECTOR_DEFAULT_CAPACITY = 16
+	SB_VECTOR_DEFAULT_CAPACITY = 16,
+	
 };
 
 /**
@@ -63,14 +80,16 @@ typedef struct {
 } sb_vector_t;
 
 /**
- * Initializes the specified vector.
+ * Initializes the specified vector. sb_error is set to
+ * SB_ERROR_MEMORY_ALLOCATION if the memory allocation fails.
  * @param vector The vector to initialize.
  */
 __songbird_header__
 void sb_vector_init(sb_vector_t *vector);
 
 /**
- * Initializes the specified vector with the given initial capacity.
+ * Initializes the specified vector with the given initial capacity. sb_error
+ * is set to SB_ERROR_MEMORY_ALLOCATION if the memory allocation fails.
  * @param vector The vector to initialize.
  * @param capacity The initial capacity of the vector, if 0 it defaults to 16
  * 		(the SB_VECTOR_DEFAULT_CAPACITY).
@@ -94,7 +113,9 @@ __songbird_header__
 unsigned sb_vector_size(sb_vector_t *vector);
 
 /**
- * Adds a value to the end of the vector.
+ * Adds a value to the end of the vector, expanding the vector as needed.
+ * sb_error is set to SB_ERROR_MEMORY_ALLOCATION if the memory
+ * allocation during expansion fails.
  * @param vector The vector.
  * @param value The value to add.
  */
@@ -102,7 +123,10 @@ __songbird_header__
 void sb_vector_add(sb_vector_t *vector, void const *value);
 
 /**
- * Inserts a value into the vector at the given index.
+ * Inserts a value into the vector at the given index, expanding the vector
+ * as needed. sb_error is set to SB_ERROR_OUT_OF_BOUNDS if index is out of
+ * bounds for the vector. sb_error is set to SB_ERROR_MEMORY_ALLOCATION if
+ * the memory allocation during expansion fails.
  * @param vector The vector.
  * @param index The index to insert at.
  * @param value The value to insert.
@@ -111,7 +135,8 @@ __songbird_header__
 void sb_vector_insert(sb_vector_t *vector, unsigned index, void const *value);
 
 /**
- * Gets a value from the given index.
+ * Gets a value from the given index. sb_error is set to
+ * SB_ERROR_OUT_OF_BOUNDS if index is out of bounds for the vector.
  * @param vector The vector.
  * @param index The index to retrieve the value at.
  * @return The value stored at the given index, or NULL if the index is larger
@@ -121,23 +146,25 @@ __songbird_header__
 void const *sb_vector_get(sb_vector_t *vector, unsigned index);
 
 /**
- * Sets a value at the given index.
+ * Sets a value at the given index. sb_error is set to
+ * SB_ERROR_OUT_OF_BOUNDS if index is out of bounds for the vector.
  * @param vector The vector.
  * @param index The index to set the value at.
  * @param value The value to put at the given index.
  * @return The value previous stored at the given index, or NULL if the index
- * 		is larger than the size of the vector.
+ * 		is out of bounds.
  */
 __songbird_header__
 void const *sb_vector_set(sb_vector_t *vector,
 	unsigned index, void const *value);
 
 /**
- * Removes a value at the given index.
+ * Removes a value at the given index. sb_error is set to
+ * SB_ERROR_OUT_OF_BOUNDS if index is out of bounds for the vector.
  * @param vector The vector.
  * @param index The index to remove the value from.
  * @return The value previous stored at the given index, or NULL if the index
- *     is larger than the size of the vector.
+ *     is out of bounds. sb_error is also set to 
  */
 __songbird_header__
 void const *sb_vector_remove(sb_vector_t *vector, unsigned index);
@@ -153,6 +180,7 @@ void const *sb_vector_remove(sb_vector_t *vector, unsigned index);
 __songbird_header__
 void sb_vector_iterate(sb_vector_t *vector, sb_iter_f iter);
 
+/* function definitions */
 
 __songbird_header__
 void sb_vector_init(sb_vector_t *vector) {
@@ -167,6 +195,9 @@ void sb_vector_init_cap(sb_vector_t *vector, unsigned capacity) {
 	*(unsigned *)&vector->size = 0;
 	*(unsigned *)&vector->capacity = capacity;
 	vector->entries = (void const **)sb_malloc(sizeof(void *) * capacity);
+	if(vector->entries == NULL) {
+		sb_error = SB_ERROR_MEMORY_ALLOCATION;
+	}
 }
 
 __songbird_header__
@@ -183,7 +214,8 @@ unsigned sb_vector_size(sb_vector_t *vector) {
 
 /**
  * Performs an expansion of the vector by doubling its previous capacity.
- * This function is not designed to be called by the end user.
+ * This function is not designed to be called by the end user. sb_error is
+ * set to SB_ERROR_MEMORY_ALLOCATION if memory allocation fails during resize.
  * @param vector The vector.
  */
 __songbird_header__
@@ -193,6 +225,7 @@ void __sb_vector_resize(sb_vector_t *vector) {
 	void const **new_entries = (const void **)
 			sb_realloc(vector->entries, sizeof(void *) * new_capacity);
 	if(new_entries == NULL) {
+		sb_error = SB_ERROR_MEMORY_ALLOCATION;
 		return; /* FAILURE! */
 	}
 	vector->entries = new_entries;
@@ -204,6 +237,7 @@ void sb_vector_insert(sb_vector_t *vector, unsigned index,
 		const void *value) {
 	unsigned i;
 	if(index > vector->size) {
+		sb_error = SB_ERROR_OUT_OF_BOUNDS;
 		return;
 	}
 	/* move everything after added index up one */
@@ -224,6 +258,7 @@ void sb_vector_add(sb_vector_t *vector, const void *value) {
 __songbird_header__
 void const *sb_vector_get(sb_vector_t *vector, unsigned index) {
 	if(index >= vector->size) {
+		sb_error = SB_ERROR_OUT_OF_BOUNDS;
 		return NULL;
 	}
 	return vector->entries[index];
@@ -234,6 +269,7 @@ void const *sb_vector_set(sb_vector_t *vector, unsigned index,
 		const void *value) {
 	void const *retval = NULL;
 	if(index >= vector->size) {
+		sb_error = SB_ERROR_OUT_OF_BOUNDS;
 		return NULL;
 	}
 	retval = vector->entries[index];
@@ -245,6 +281,7 @@ __songbird_header__
 void const *sb_vector_remove(sb_vector_t *vector, unsigned index) {
 	void const *retval = NULL;
 	if(index >= vector->size) {
+		sb_error = SB_ERROR_OUT_OF_BOUNDS;
 		return NULL;
 	}
 	retval = vector->entries[index];
