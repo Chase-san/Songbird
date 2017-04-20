@@ -54,6 +54,7 @@ __thread int sb_error = SB_ERROR_NONE;
 int sb_error = SB_ERROR_NONE;
 #endif
 #define sb_error() (sb_error)
+#define sb_error_clear() (sb_error = SB_ERROR_NONE)
 #endif
 
 #ifndef __songbird_iter_func__
@@ -67,7 +68,7 @@ typedef void (*sb_iter_f)(void const *);
  * It is highly recommended you do not change any values in this
  * structure manually.
  */
-typedef struct {
+typedef struct sb_array {
 	unsigned const size;
 	void const **entries;
 } sb_array_t;

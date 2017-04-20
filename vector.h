@@ -55,6 +55,7 @@ __thread int sb_error = SB_ERROR_NONE;
 int sb_error = SB_ERROR_NONE;
 #endif
 #define sb_error() (sb_error)
+#define sb_error_clear() (sb_error = SB_ERROR_NONE)
 #endif
 
 #ifndef __songbird_iter_func__
@@ -64,7 +65,6 @@ typedef void (*sb_iter_f)(void const *);
 
 enum {
 	SB_VECTOR_DEFAULT_CAPACITY = 16,
-	
 };
 
 /**
@@ -73,7 +73,7 @@ enum {
  * It is highly recommended you do not change any values in this
  * structure manually.
  */
-typedef struct {
+typedef struct sb_vector {
 	unsigned const size;
 	unsigned const capacity;
 	void const **entries;
@@ -171,8 +171,8 @@ void const *sb_vector_remove(sb_vector_t *vector, unsigned index);
 
 /**
  * Iteraters through the given vector calling the specified iteration
- * function. This function does nothing if the specified iteration function is
- * NULL.
+ * function. This function does nothing if the specified iteration function
+ * is NULL.
  * @param vector The vector.
  * @param iter A function pointer to the iteration function that will be
  * 		called.
@@ -202,6 +202,9 @@ void sb_vector_init_cap(sb_vector_t *vector, unsigned capacity) {
 
 __songbird_header__
 void sb_vector_free(sb_vector_t *vector) {
+	if(!vector) {
+		return;
+	}
 	if(vector->capacity > 0) {
 		sb_free(vector->entries);
 	}
